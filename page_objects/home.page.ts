@@ -1,17 +1,17 @@
-import { Page, Locator } from '@playwright/test';
+import { Locator } from '@playwright/test';
+import { BasePage } from './base.page';
 
-export class HomePage {
-  readonly page: Page;
+export class HomePage extends BasePage {
   readonly loginHeading: Locator;
 
-  constructor(page: Page) {
-    this.page = page;
+  constructor(page: any) {
+    super(page);
     // This is the login heading: after login it should disappear from the page.
     this.loginHeading = page.getByRole('heading', { name: 'Login to FashionHub' });
   }
 
   // Returns true when the login heading is gone (i.e., likely logged in).
   async isLoggedIn(): Promise<boolean> {
-    return (await this.loginHeading.count()) === 0;
+    return (await this.getCount(this.loginHeading)) === 0;
   }
 }
