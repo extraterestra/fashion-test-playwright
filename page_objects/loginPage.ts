@@ -1,5 +1,5 @@
 import { Locator, expect } from '@playwright/test';
-import { BasePage } from './base.page';
+import { BasePage } from './basePage';
 
 export class LoginPage extends BasePage {
   readonly username: Locator;

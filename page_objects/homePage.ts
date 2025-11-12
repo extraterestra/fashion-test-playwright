@@ -1,5 +1,5 @@
 import { Locator } from '@playwright/test';
-import { BasePage } from './base.page';
+import { BasePage } from './basePage';
 
 export class HomePage extends BasePage {
   readonly loginHeading: Locator;
