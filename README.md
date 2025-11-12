@@ -61,7 +61,7 @@ git --version
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/extraterestra/fashion-test-playwright.git
 cd fashion-test-playwright
 ```
 
@@ -628,7 +628,7 @@ For issues, questions, or contributions:
 
 ## License
 
-[Add your license here]
+Sergiy Kucheryavyy
 
 ---
 
