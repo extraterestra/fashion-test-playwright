@@ -9,6 +9,38 @@ import { defineConfig, devices } from '@playwright/test';
 // dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 /**
+ * Environment configuration
+ * Supports environment variable: TEST_ENV=test, TEST_ENV=stage, or TEST_ENV=prod
+ * Usage: TEST_ENV=prod npx playwright test
+ * Default: test
+ */
+// Try several ways to detect the environment – this makes the config resilient
+// when running via `npx`, `npm run`, or other wrappers.
+console.log('env debug: TEST_ENV=', process.env.TEST_ENV, 'npm_config_test_env=', process.env.npm_config_test_env, 'PLAYWRIGHT_TEST_ENV=', process.env.PLAYWRIGHT_TEST_ENV);
+// Some users may still pass a CLI flag like --test-env=prod; check argv as a fallback.
+const argvEnvMatch = process.argv.find((a) => a.startsWith('--test-env='));
+const argvEnv = argvEnvMatch ? argvEnvMatch.split('=')[1] : undefined;
+if (argvEnv) console.log('Found argv --test-env:', argvEnv);
+const envVar = process.env.TEST_ENV || process.env.npm_config_test_env || process.env.PLAYWRIGHT_TEST_ENV;
+// Validate the environment; default to 'test' if not recognized
+const validEnvs = ['test', 'stage', 'prod'] as const;
+const testEnv = (validEnvs.includes(envVar as any) ? envVar : 'test') || (validEnvs.includes(argvEnv as any) ? argvEnv : 'test');
+console.log('Selected testEnv:', testEnv);
+
+const environmentUrls = {
+  test: 'http://localhost:4000/fashionhub',
+  stage: 'https://staging-env/fashionhub/',
+  prod: 'https://pocketaces2.github.io/fashionhub/',
+};
+
+let baseURL = environmentUrls[testEnv as keyof typeof environmentUrls];
+// Ensure baseURL ends with a trailing slash so relative navigations like `login.html`
+// are appended to the path (otherwise leading/trailing slash behavior can strip
+// path segments when resolving URLs).
+if (!baseURL.endsWith('/')) baseURL += '/';
+console.log('Using baseURL:', baseURL);
+
+/**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
@@ -26,7 +58,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    // baseURL: 'http://localhost:3000',
+    baseURL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',

@@ -1,15 +1,20 @@
 import { test, expect } from '@playwright/test';
 
-const LOGIN_URL = 'http://localhost:4000/fashionhub/login.html';
-
 test.describe('Login page', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(LOGIN_URL);
-    await expect(page).toHaveURL(/login.html/);
+  test.beforeEach(async ({ page, baseURL }) => {
+    // Use a relative URL (no leading slash) so Playwright resolves it against
+    // the configured `use.baseURL` and preserves any path segment like `fashionhub`.
+    console.log('test fixture baseURL:', baseURL);
+    await page.goto('login.html');
+      // Print the actual page URL to help debug which baseURL was used.
+      console.log('page after goto:', await page.url());
+      await expect(page).toHaveURL(/login.html/);
     await expect(page.getByRole('heading', { name: 'Login to FashionHub' })).toBeVisible();
   });
 
   test('Happy path — Successful login', async ({ page }) => {
+    const currentUrl = page.url();
+    console.log('Current page URL used is:', currentUrl);
     const username = page.getByRole('textbox', { name: 'Username' });
     const password = page.getByRole('textbox', { name: 'Password' });
     const loginBtn = page.getByRole('button', { name: 'Login' });
