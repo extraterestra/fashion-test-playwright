@@ -15,6 +15,7 @@ A comprehensive end-to-end test suite for the FashionHub application built with 
   - [Run on Production Environment](#run-on-production-environment)
   - [Run with Custom Parameters](#run-with-custom-parameters)
 - [Environment Variables](#environment-variables)
+- [Test Fixtures](#test-fixtures)
 - [Page Objects](#page-objects)
 - [Test Examples](#test-examples)
 - [Debugging Tests](#debugging-tests)
@@ -100,6 +101,7 @@ fashion-test-playwright/
 │   ├── loginPage.ts             # Login page object
 │   └── homePage.ts              # Home/dashboard page object
 ├── tests/
+│   ├── fixtures.ts              # Custom Playwright test fixtures
 │   ├── login.spec.ts            # Login tests
 │   ├── seed.spec.ts             # Seed/setup tests
 │   └── example.spec.ts          # Example tests
@@ -281,6 +283,192 @@ npx playwright test
 
 ---
 
+## Test Fixtures
+
+This project uses **Playwright Test Fixtures** to provide pre-configured page objects to your tests automatically. Fixtures reduce boilerplate code and make tests cleaner and more maintainable.
+
+### What are Fixtures?
+
+Fixtures are a Playwright feature that allows you to:
+- **Automatically set up test dependencies** (like page objects) before each test
+- **Share common setup logic** across multiple tests
+- **Inject dependencies** directly into test functions
+- **Ensure proper cleanup** after tests complete
+
+### Custom Fixtures (`tests/fixtures.ts`)
+
+The project includes custom fixtures that automatically create and initialize page objects:
+
+```typescript
+import { test as base, expect } from '@playwright/test';
+import { LoginPage } from '../page_objects/loginPage';
+import { HomePage } from '../page_objects/homePage';
+
+type MyFixtures = {
+  loginPage: LoginPage;
+  homePage: HomePage;
+};
+
+export const test = base.extend<MyFixtures>({
+  loginPage: async ({ page }, use) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await use(loginPage);
+  },
+  homePage: async ({ page }, use) => {
+    const homePage = new HomePage(page);
+    await use(homePage);
+  },
+});
+
+export { expect };
+```
+
+### Available Fixtures
+
+| Fixture | Type | Description | Auto-initialized |
+|---------|------|-------------|------------------|
+| `loginPage` | `LoginPage` | Login page object, navigates to login.html | ✅ Yes |
+| `homePage` | `HomePage` | Home/dashboard page object | ✅ Yes |
+| `page` | `Page` | Playwright page instance (built-in) | ✅ Yes |
+| `context` | `BrowserContext` | Browser context (built-in) | ✅ Yes |
+| `browser` | `Browser` | Browser instance (built-in) | ✅ Yes |
+
+### Using Fixtures in Tests
+
+Instead of manually creating page objects in every test:
+
+**❌ Without Fixtures (verbose):**
+```typescript
+import { test, expect } from '@playwright/test';
+import { LoginPage } from '../page_objects/loginPage';
+import { HomePage } from '../page_objects/homePage';
+
+test('Login test', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const homePage = new HomePage(page);
+  
+  await loginPage.goto();
+  await loginPage.submitCredentials('user', 'pass');
+  // test logic...
+});
+```
+
+**✅ With Fixtures (clean):**
+```typescript
+import { test, expect } from './fixtures';
+
+test('Login test', async ({ loginPage, homePage }) => {
+  // loginPage is already initialized and navigated to login.html
+  await loginPage.submitCredentials('user', 'pass');
+  // test logic...
+});
+```
+
+### Benefits of Fixtures
+
+1. **Less Boilerplate** — No need to instantiate page objects in every test
+2. **Automatic Setup** — `loginPage` automatically navigates to the login page
+3. **Consistent Initialization** — All tests use the same setup logic
+4. **Better Readability** — Test code focuses on behavior, not setup
+5. **Type Safety** — TypeScript provides autocomplete for fixtures
+6. **Parallel Isolation** — Each test gets its own fresh page objects
+
+### Creating Additional Fixtures
+
+To add more fixtures (e.g., for a ProductPage):
+
+1. **Update `tests/fixtures.ts`:**
+
+```typescript
+import { ProductPage } from '../page_objects/productPage';
+
+type MyFixtures = {
+  loginPage: LoginPage;
+  homePage: HomePage;
+  productPage: ProductPage;  // Add new fixture type
+};
+
+export const test = base.extend<MyFixtures>({
+  loginPage: async ({ page }, use) => {
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    await use(loginPage);
+  },
+  homePage: async ({ page }, use) => {
+    const homePage = new HomePage(page);
+    await use(homePage);
+  },
+  productPage: async ({ page }, use) => {  // Add new fixture
+    const productPage = new ProductPage(page);
+    await use(productPage);
+  },
+});
+```
+
+2. **Use in tests:**
+
+```typescript
+test('Product test', async ({ productPage }) => {
+  await productPage.searchProduct('Shoes');
+  // test logic...
+});
+```
+
+### Fixture Lifecycle
+
+Fixtures follow this lifecycle:
+
+1. **Setup** — Fixture is created before the test runs
+2. **Use** — Test receives the fixture and uses it
+3. **Teardown** — Fixture is cleaned up after the test completes
+
+```typescript
+export const test = base.extend<MyFixtures>({
+  loginPage: async ({ page }, use) => {
+    // 1. SETUP: Create and initialize
+    const loginPage = new LoginPage(page);
+    await loginPage.goto();
+    
+    // 2. USE: Pass to test
+    await use(loginPage);
+    
+    // 3. TEARDOWN: Cleanup (if needed)
+    // Optional cleanup code here
+  },
+});
+```
+
+### Advanced Fixture Patterns
+
+#### Worker-Scoped Fixtures
+
+For expensive setup that can be shared across tests:
+
+```typescript
+export const test = base.extend<{}, { adminToken: string }>({
+  adminToken: [async ({}, use) => {
+    const token = await authenticateAdmin();
+    await use(token);
+  }, { scope: 'worker' }],
+});
+```
+
+#### Dependent Fixtures
+
+Fixtures can depend on other fixtures:
+
+```typescript
+export const test = base.extend<MyFixtures>({
+  authenticatedPage: async ({ loginPage, page }, use) => {
+    await loginPage.submitCredentials('admin', 'admin123');
+    await use(page);
+  },
+});
+```
+
+---
+
 ## Page Objects
 
 The test suite uses the **Page Object Model (POM)** pattern for maintainable and reusable test code.
@@ -332,10 +520,49 @@ Home/dashboard page object with methods:
 
 ## Test Examples
 
-### Example 1: Happy Path Login Test
+### Example 1: Happy Path Login Test (Using Fixtures)
 
 ```typescript
-test('Happy path — Successful login', async ({ page }) => {
+import { test, expect } from './fixtures';
+
+test('Happy path — Successful login', async ({ loginPage, homePage }) => {
+  // loginPage is already initialized and navigated to login.html
+  await loginPage.submitCredentials('demouser', 'fashion123');
+
+  await expect(loginPage.heading).toHaveCount(0);
+  expect(await homePage.isLoggedIn()).toBe(true);
+});
+```
+
+### Example 2: Negative Path - Invalid Password (Using Fixtures)
+
+```typescript
+import { test, expect } from './fixtures';
+
+test('Negative — Incorrect password', async ({ loginPage }) => {
+  // loginPage is already on login.html
+  await loginPage.fillCredentials('demouser', 'wrongpassword');
+  await loginPage.loginBtn.click();
+  await loginPage.page.waitForLoadState('networkidle');
+
+  await expect(loginPage.heading).toBeVisible();
+  
+  if (await loginPage.hasAlert()) {
+    await expect(loginPage.alert.first()).toBeVisible();
+  }
+});
+```
+
+### Example 3: Without Fixtures (Manual Setup)
+
+If you prefer not to use fixtures, you can manually create page objects:
+
+```typescript
+import { test, expect } from '@playwright/test';
+import { LoginPage } from '../page_objects/loginPage';
+import { HomePage } from '../page_objects/homePage';
+
+test('Manual setup example', async ({ page }) => {
   const login = new LoginPage(page);
   const home = new HomePage(page);
 
@@ -350,37 +577,42 @@ test('Happy path — Successful login', async ({ page }) => {
 });
 ```
 
-### Example 2: Negative Path - Invalid Password
+### Example 4: Environment-Specific Logic with Fixtures
 
 ```typescript
-test('Negative — Incorrect password', async ({ page }) => {
-  const login = new LoginPage(page);
+import { test, expect } from './fixtures';
 
-  await login.goto();
-  await login.fillCredentials('demouser', 'wrongpassword');
-  await login.loginBtn.click();
-  await page.waitForLoadState('networkidle');
-
-  await expect(page).toHaveURL(/login.html/);
-  await expect(login.heading).toBeVisible();
+test('Test with environment check', async ({ loginPage, page, baseURL }) => {
+  console.log('Running test against:', baseURL);
   
-  if (await login.hasAlert()) {
-    const alertText = await login.getAlertText();
-    console.log('Alert message:', alertText);
-  }
+  // loginPage fixture already navigated to login.html
+  await loginPage.submitCredentials('demouser', 'fashion123');
+  
+  // Test logic here
 });
 ```
 
-### Example 3: Custom Test with Environment-Specific Logic
+### Example 5: Multiple Tests Using Same Fixtures
 
 ```typescript
-test('Test with environment check', async ({ page, baseURL }) => {
-  console.log('Running test against:', baseURL);
-  
-  const login = new LoginPage(page);
-  await login.goto();
-  
-  // Test logic here
+import { test, expect } from './fixtures';
+
+test.describe('Login validation', () => {
+  test('Valid credentials', async ({ loginPage, homePage }) => {
+    await loginPage.submitCredentials('demouser', 'fashion123');
+    expect(await homePage.isLoggedIn()).toBe(true);
+  });
+
+  test('Invalid credentials', async ({ loginPage }) => {
+    await loginPage.submitCredentials('wronguser', 'wrongpass');
+    await expect(loginPage.heading).toBeVisible();
+    expect(await loginPage.hasAlert()).toBe(true);
+  });
+
+  test('Empty credentials', async ({ loginPage }) => {
+    await loginPage.submitCredentials('', '');
+    await expect(loginPage.heading).toBeVisible();
+  });
 });
 ```
 
@@ -604,14 +836,16 @@ Using baseURL: https://pocketaces2.github.io/fashionhub/
 
 ## Best Practices
 
-1. **Always use Page Objects** — Don't interact with elements directly in tests
-2. **Use relative paths** — `goto('login.html')` instead of absolute URLs
-3. **Wait for elements** — Use `waitForVisible()` instead of hardcoded sleeps
-4. **Test environments** — Keep test, staging, and production URLs in config
-5. **Meaningful assertions** — Assert user-visible changes, not implementation details
-6. **Reuse credentials** — Store test credentials in environment or config (never hardcode secrets)
-7. **Run in CI** — Automate test runs on each commit/PR
-8. **Review traces** — Use trace files to debug failures
+1. **Use Fixtures** — Leverage test fixtures for automatic page object setup and cleaner test code
+2. **Always use Page Objects** — Don't interact with elements directly in tests
+3. **Use relative paths** — `goto('login.html')` instead of absolute URLs
+4. **Wait for elements** — Use `waitForVisible()` instead of hardcoded sleeps
+5. **Test environments** — Keep test, staging, and production URLs in config
+6. **Meaningful assertions** — Assert user-visible changes, not implementation details
+7. **Reuse credentials** — Store test credentials in environment or config (never hardcode secrets)
+8. **Run in CI** — Automate test runs on each commit/PR
+9. **Review traces** — Use trace files to debug failures
+10. **Fixture scope** — Use test-scoped fixtures for isolated state, worker-scoped for shared expensive setup
 
 ---
 
