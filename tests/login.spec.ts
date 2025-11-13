@@ -1,15 +1,19 @@
 import { test, expect } from './fixtures';
-// import { test, expect } from '@playwright/test';
 
 test.describe('Login page', () => {
-  test('Happy path — Successful login', async ({ loginPage, homePage }) => {
-    await loginPage.submitCredentials('demouser', 'fashion123');
+  test.beforeEach(async ({ loginPage }) => {
+    await loginPage.goto();
+  });
+
+  test('Happy path — Successful login', async ({ loginPage, homePage, testUser }) => {
+    // Use testUser fixture for environment-specific credentials
+    await loginPage.submitCredentials(testUser.username, testUser.password);
     await expect(loginPage.heading).toHaveCount(0);
     expect(await homePage.isLoggedIn()).toBe(true);
   });
 
-  test('Negative — Incorrect password', async ({ loginPage }) => {
-    await loginPage.fillCredentials('demouser', 'wrongpassword');
+  test('Negative — Incorrect password', async ({ loginPage, testUser }) => {
+    await loginPage.fillCredentials(testUser.username, 'wrongpassword');
     await loginPage.loginBtn.click();
     await loginPage.page.waitForLoadState('networkidle');
     await expect(loginPage.heading).toBeVisible();

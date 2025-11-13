@@ -105,7 +105,10 @@ fashion-test-playwright/
 │   ├── login.spec.ts            # Login tests
 │   ├── seed.spec.ts             # Seed/setup tests
 │   └── example.spec.ts          # Example tests
-├── playwright.config.ts         # Playwright configuration
+├── playwright.config.ts         # Dynamic config router
+├── playwright-test.config.ts    # Test environment configuration
+├── playwright-stage.config.ts   # Staging environment configuration
+├── playwright-prod.config.ts    # Production environment configuration
 ├── package.json                 # Dependencies and scripts
 ├── playwright-report/           # Test reports (generated)
 ├── test-results/                # Test results (generated)
@@ -116,42 +119,79 @@ fashion-test-playwright/
 
 ## Configuration
 
-### Playwright Config (`playwright.config.ts`)
+The project uses **separate configuration files per environment** for better isolation and control:
 
-The configuration file handles:
-- **baseURL selection** based on the `TEST_ENV` environment variable
-- **Browser configurations** (Chromium, Firefox, WebKit)
-- **Timeout settings** and retry logic
-- **Test environment detection** with multiple fallback methods
+### Configuration Files
 
-**Supported Environments:**
-```typescript
-test: 'http://localhost:4000/fashionhub'
-stage: 'https://staging-env/fashionhub/'
-prod: 'https://pocketaces2.github.io/fashionhub/'
-```
+#### `playwright-test.config.ts` (Local/Test Environment)
+- **baseURL**: `http://localhost:4000/fashionhub/`
+- **Credentials**: `demouser` / `fashion123` (can override with `TEST_USERNAME`, `TEST_PASSWORD`)
+- **Browsers**: Chromium, Firefox, WebKit
+- **Workers**: Parallel execution enabled
+- **Retries**: 0 locally, 2 on CI
 
-**Environment Detection Order:**
-1. `TEST_ENV` environment variable
-2. `npm_config_test_env` (npm script variable)
-3. `PLAYWRIGHT_TEST_ENV` environment variable
-4. Command-line argument `--test-env=<env>`
-5. Default: `test`
+#### `playwright-stage.config.ts` (Staging Environment)
+- **baseURL**: `https://staging-env/fashionhub/`
+- **Credentials**: `stageuser` / `stagepass123` (can override with `STAGE_USERNAME`, `STAGE_PASSWORD`)
+- **Browsers**: Chromium, Firefox
+- **Workers**: 2 parallel workers
+- **Retries**: 1 by default, 2 on CI
+
+#### `playwright-prod.config.ts` (Production Environment)
+- **baseURL**: `https://pocketaces2.github.io/fashionhub/`
+- **Credentials**: `demouser` / `fashion123` (can override with `PROD_USERNAME`, `PROD_PASSWORD`)
+- **Browsers**: Chrome only
+- **Workers**: 1 (serial execution to reduce load)
+- **Retries**: 2 always
+- **Additional**: Video recording and full screenshots enabled
+
+#### `playwright.config.ts` (Dynamic Router)
+- Automatically loads the appropriate config based on `TEST_ENV` variable
+- Provides backward compatibility with environment variable approach
+
+### Benefits of Per-Environment Configs
+
+✅ **Isolated configuration** - Each environment has its own settings
+✅ **Different browser sets** - Production runs only on Chrome, test runs on all browsers
+✅ **Custom retry logic** - Production has more retries, test has none
+✅ **Environment-specific credentials** - Separate credentials per environment
+✅ **Optimized workers** - Production runs serially, test/stage run in parallel
+✅ **Explicit control** - Use `--config` flag to specify exact environment
 
 ---
 
 ## Running Tests
 
+### Quick Start
+
+**Recommended approach:** Use npm scripts with explicit config files
+
+```bash
+# Test environment (localhost)
+npm run test:test
+
+# Staging environment
+npm run test:stage
+
+# Production environment
+npm run test:prod
+```
+
 ### Run on Test Environment
 
-The test environment targets localhost and is the default.
+The test environment targets localhost.
 
-#### Using npm script:
+#### Using npm script (Recommended):
 ```bash
 npm run test:test
 ```
 
-#### Using environment variable:
+#### Using explicit config file:
+```bash
+npx playwright test --config=playwright-test.config.ts
+```
+
+#### Using environment variable (Legacy):
 ```bash
 TEST_ENV=test npx playwright test
 ```
@@ -161,16 +201,26 @@ TEST_ENV=test npx playwright test
 npm run test:test -- tests/login.spec.ts
 ```
 
+#### Run in headed mode:
+```bash
+npm run test:test:headed
+```
+
 ---
 
 ### Run on Staging Environment
 
-#### Using npm script:
+#### Using npm script (Recommended):
 ```bash
 npm run test:stage
 ```
 
-#### Using environment variable:
+#### Using explicit config file:
+```bash
+npx playwright test --config=playwright-stage.config.ts
+```
+
+#### Using environment variable (Legacy):
 ```bash
 TEST_ENV=stage npx playwright test
 ```
@@ -180,42 +230,61 @@ TEST_ENV=stage npx playwright test
 npm run test:stage -- --project=chromium --headed
 ```
 
+#### Run in headed mode:
+```bash
+npm run test:stage:headed
+```
+
 ---
 
 ### Run on Production Environment
 
-#### Using npm script:
+#### Using npm script (Recommended):
 ```bash
 npm run test:prod
 ```
 
-#### Using environment variable:
+#### Using explicit config file:
+```bash
+npx playwright test --config=playwright-prod.config.ts
+```
+
+#### Using environment variable (Legacy):
 ```bash
 TEST_ENV=prod npx playwright test
 ```
 
-#### Run with specific browser and headed mode (visible browser):
+#### Run in headed mode:
 ```bash
-npm run test:prod -- --project=firefox --headed
+npm run test:prod:headed
+```
+
+#### Override production credentials:
+```bash
+PROD_USERNAME=myuser PROD_PASSWORD=mypass npm run test:prod
 ```
 
 ---
 
 ### Run with Custom Parameters
 
-#### Specify environment and test file:
+#### Specify config and test file:
 ```bash
-TEST_ENV=prod npx playwright test tests/login.spec.ts
+npx playwright test --config=playwright-prod.config.ts tests/login.spec.ts
 ```
 
 #### Run in headed mode (see browser window):
 ```bash
 npm run test:prod -- --headed
+# or use the pre-configured script:
+npm run test:prod:headed
 ```
 
 #### Run in debug mode (step through code):
 ```bash
-npm run test:test -- --debug
+npm run test:debug
+# or with specific config:
+npx playwright test --config=playwright-test.config.ts --debug
 ```
 
 #### Run with specific browser project:
@@ -238,9 +307,14 @@ npm run test:prod -- --verbose
 npm run test:test -- --timeout=60000
 ```
 
-#### Combined example (Production, Firefox, Headed, Verbose):
+#### Combined example (Production, Chrome, Headed, Verbose):
 ```bash
-TEST_ENV=prod npx playwright test --project=firefox --headed --verbose
+npx playwright test --config=playwright-prod.config.ts --project=chrome --headed --verbose
+```
+
+#### Run with UI mode (interactive):
+```bash
+npx playwright test --config=playwright-test.config.ts --ui
 ```
 
 ---
@@ -277,11 +351,14 @@ npx playwright test
 ### Available Environment Variables
 
 | Variable | Values | Default | Purpose |
-|----------|--------|---------|---------|
-| `TEST_ENV` | `test`, `stage`, `prod` | `test` | Select target environment |
-| `PLAYWRIGHT_TEST_ENV` | `test`, `stage`, `prod` | N/A | Alternative env var for TEST_ENV |
-
----
+|----------|--------|---------|---------|  
+| `TEST_ENV` | `test`, `stage`, `prod` | `test` | Select target environment (for dynamic config router) |
+| `TEST_USERNAME` | string | `demouser` | Override test environment username |
+| `TEST_PASSWORD` | string | `fashion123` | Override test environment password |
+| `STAGE_USERNAME` | string | `stageuser` | Override staging environment username |
+| `STAGE_PASSWORD` | string | `stagepass123` | Override staging environment password |
+| `PROD_USERNAME` | string | `demouser` | Override production environment username |
+| `PROD_PASSWORD` | string | `fashion123` | Override production environment password |---
 
 ## Test Fixtures
 
@@ -328,8 +405,9 @@ export { expect };
 
 | Fixture | Type | Description | Auto-initialized |
 |---------|------|-------------|------------------|
-| `loginPage` | `LoginPage` | Login page object, navigates to login.html | ✅ Yes |
+| `loginPage` | `LoginPage` | Login page object (call `.goto()` to navigate) | ✅ Yes |
 | `homePage` | `HomePage` | Home/dashboard page object | ✅ Yes |
+| `testUser` | `{ username, password }` | Environment-specific test credentials | ✅ Yes |
 | `page` | `Page` | Playwright page instance (built-in) | ✅ Yes |
 | `context` | `BrowserContext` | Browser context (built-in) | ✅ Yes |
 | `browser` | `Browser` | Browser instance (built-in) | ✅ Yes |
@@ -525,12 +603,18 @@ Home/dashboard page object with methods:
 ```typescript
 import { test, expect } from './fixtures';
 
-test('Happy path — Successful login', async ({ loginPage, homePage }) => {
-  // loginPage is already initialized and navigated to login.html
-  await loginPage.submitCredentials('demouser', 'fashion123');
+test.describe('Login page', () => {
+  test.beforeEach(async ({ loginPage }) => {
+    await loginPage.goto();
+  });
 
-  await expect(loginPage.heading).toHaveCount(0);
-  expect(await homePage.isLoggedIn()).toBe(true);
+  test('Happy path — Successful login', async ({ loginPage, homePage, testUser }) => {
+    // testUser fixture provides environment-specific credentials
+    await loginPage.submitCredentials(testUser.username, testUser.password);
+
+    await expect(loginPage.heading).toHaveCount(0);
+    expect(await homePage.isLoggedIn()).toBe(true);
+  });
 });
 ```
 
@@ -539,17 +623,23 @@ test('Happy path — Successful login', async ({ loginPage, homePage }) => {
 ```typescript
 import { test, expect } from './fixtures';
 
-test('Negative — Incorrect password', async ({ loginPage }) => {
-  // loginPage is already on login.html
-  await loginPage.fillCredentials('demouser', 'wrongpassword');
-  await loginPage.loginBtn.click();
-  await loginPage.page.waitForLoadState('networkidle');
+test.describe('Login page', () => {
+  test.beforeEach(async ({ loginPage }) => {
+    await loginPage.goto();
+  });
 
-  await expect(loginPage.heading).toBeVisible();
-  
-  if (await loginPage.hasAlert()) {
-    await expect(loginPage.alert.first()).toBeVisible();
-  }
+  test('Negative — Incorrect password', async ({ loginPage, testUser }) => {
+    // Use testUser for username, but wrong password
+    await loginPage.fillCredentials(testUser.username, 'wrongpassword');
+    await loginPage.loginBtn.click();
+    await loginPage.page.waitForLoadState('networkidle');
+
+    await expect(loginPage.heading).toBeVisible();
+    
+    if (await loginPage.hasAlert()) {
+      await expect(loginPage.alert.first()).toBeVisible();
+    }
+  });
 });
 ```
 
@@ -820,32 +910,37 @@ Using baseURL: https://pocketaces2.github.io/fashionhub/
 ## Common Commands Reference
 
 | Command | Purpose |
-|---------|---------|
+|---------|---------|  
 | `npm install` | Install all dependencies |
 | `npm run test:test` | Run tests on test environment |
 | `npm run test:stage` | Run tests on staging environment |
 | `npm run test:prod` | Run tests on production environment |
-| `npm test` | Run all tests (test environment) |
-| `npx playwright test --headed` | Run tests with visible browser |
-| `npx playwright test --debug` | Run tests in debug mode |
+| `npm run test:test:headed` | Run tests on test environment (headed mode) |
+| `npm run test:stage:headed` | Run tests on staging environment (headed mode) |
+| `npm run test:prod:headed` | Run tests on production environment (headed mode) |
+| `npm run test:debug` | Run tests in debug mode |
+| `npm test` | Run all tests (default config) |
+| `npx playwright test --config=playwright-test.config.ts` | Run with explicit test config |
+| `npx playwright test --config=playwright-prod.config.ts` | Run with explicit prod config |
+| `npx playwright test --ui` | Run tests in UI mode (interactive) |
 | `npx playwright show-report` | View HTML test report |
 | `npx playwright install` | Install browsers |
-| `TEST_ENV=prod npx playwright test` | Run on production with inline env var |
-
----
+| `TEST_ENV=prod npx playwright test` | Run using dynamic router config |---
 
 ## Best Practices
 
-1. **Use Fixtures** — Leverage test fixtures for automatic page object setup and cleaner test code
-2. **Always use Page Objects** — Don't interact with elements directly in tests
-3. **Use relative paths** — `goto('login.html')` instead of absolute URLs
-4. **Wait for elements** — Use `waitForVisible()` instead of hardcoded sleeps
-5. **Test environments** — Keep test, staging, and production URLs in config
-6. **Meaningful assertions** — Assert user-visible changes, not implementation details
-7. **Reuse credentials** — Store test credentials in environment or config (never hardcode secrets)
-8. **Run in CI** — Automate test runs on each commit/PR
-9. **Review traces** — Use trace files to debug failures
-10. **Fixture scope** — Use test-scoped fixtures for isolated state, worker-scoped for shared expensive setup
+1. **Use explicit config files** — Prefer `--config=playwright-test.config.ts` over environment variables for clarity
+2. **Use Fixtures** — Leverage test fixtures (`loginPage`, `homePage`, `testUser`) for cleaner test code
+3. **Environment-specific credentials** — Use `testUser` fixture to get correct credentials per environment
+4. **Always use Page Objects** — Don't interact with elements directly in tests
+5. **Use relative paths** — `goto('login.html')` instead of absolute URLs to leverage baseURL
+6. **Wait for elements** — Use `waitForVisible()` instead of hardcoded sleeps
+7. **Separate configs per environment** — Keep environment-specific settings isolated
+8. **Meaningful assertions** — Assert user-visible changes, not implementation details
+9. **Override credentials via env vars** — For production: `PROD_USERNAME=user PROD_PASSWORD=pass npm run test:prod`
+10. **Run in CI** — Automate test runs on each commit/PR with appropriate config
+11. **Review traces** — Use trace files to debug failures
+12. **Use beforeEach for navigation** — Call `loginPage.goto()` in `beforeEach` hook for consistent test setup
 
 ---
 

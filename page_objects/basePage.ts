@@ -16,7 +16,14 @@ export class BasePage {
    * @param path - relative path (e.g., 'login.html', 'home.html')
    */
   async goto(path: string): Promise<void> {
-    await this.page.goto(path);
+    console.log('🌐 Attempting navigation to path:', path);
+    try {
+      await this.page.goto(path);
+      console.log('✅ Successfully navigated to:', this.page.url());
+    } catch (error) {
+      console.error('❌ Navigation failed:', error instanceof Error ? error.message : error);
+      throw error;
+    }
   }
 
   /**

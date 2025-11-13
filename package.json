@@ -5,9 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "npx playwright test",
-    "test:test": "cross-env TEST_ENV=test npx playwright test",
-    "test:stage": "cross-env TEST_ENV=stage npx playwright test",
-    "test:prod": "cross-env TEST_ENV=prod npx playwright test"
+    "test:test": "npx playwright test --config=playwright-test.config.ts",
+    "test:stage": "npx playwright test --config=playwright-stage.config.ts",
+    "test:prod": "npx playwright test --config=playwright-prod.config.ts",
+    "test:test:headed": "npx playwright test --config=playwright-test.config.ts --headed",
+    "test:stage:headed": "npx playwright test --config=playwright-stage.config.ts --headed",
+    "test:prod:headed": "npx playwright test --config=playwright-prod.config.ts --headed",
+    "test:debug": "npx playwright test --config=playwright-test.config.ts --debug"
   },
   "keywords": [],
   "author": "",
