@@ -33,7 +33,7 @@ pipeline {
         stage('Clean Previous Docker Containers') {
             steps {
                 echo '🧹 Cleaning up previous Docker containers...'
-                sh 'docker compose down --remove-orphans || true'
+                sh 'docker compose -p "$COMPOSE_PROJECT_NAME" down --remove-orphans || true'
                 sh 'docker image prune -f || true'
             }
         }
@@ -41,7 +41,7 @@ pipeline {
         stage('Run Tests in Docker') {
             steps {
                 echo '🧪 Running Playwright tests in Docker containers...'
-                sh 'docker compose up --build --abort-on-container-exit --exit-code-from playwright-tests'
+                sh 'docker compose -p "$COMPOSE_PROJECT_NAME" up --build --abort-on-container-exit --exit-code-from playwright-tests'
             }
         }
     }
@@ -65,7 +65,7 @@ pipeline {
             archiveArtifacts artifacts: 'playwright-report/**/*,test-results/**/*', allowEmptyArchive: true
             
             echo '🧹 Cleaning up Docker containers...'
-            sh 'docker compose down --remove-orphans || true'
+            sh 'docker compose -p "$COMPOSE_PROJECT_NAME" down --remove-orphans || true'
         }
         
         success {
