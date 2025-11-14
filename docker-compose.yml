@@ -1,0 +1,41 @@
+services:
+  # Web server service - pulls the FashionHub demo app
+  fashionhub-app:
+    image: pocketaces2/fashionhub-demo-app:latest
+    container_name: fashionhub-server
+    ports:
+      - "4000:4000"
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4000/fashionhub/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # Playwright test runner
+  playwright-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: playwright-runner
+    depends_on:
+      fashionhub-app:
+        condition: service_healthy
+    environment:
+      - CI=true
+      - TEST_ENV=test
+      - BASE_URL=http://fashionhub-app:4000/fashionhub/
+    volumes:
+      - ./tests:/app/tests
+      - ./page_objects:/app/page_objects
+      - ./playwright-report:/app/playwright-report
+      - ./test-results:/app/test-results
+    networks:
+      - test-network
+    command: npm run test:test
+
+networks:
+  test-network:
+    driver: bridge

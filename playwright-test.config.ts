@@ -4,6 +4,11 @@ import { defineConfig, devices } from '@playwright/test';
  * Test Environment Configuration
  * For local development and testing
  */
+
+// Determine if running in Docker
+const isDocker = process.env.CI === 'true' || process.env.DOCKER === 'true';
+const baseURL = process.env.BASE_URL || 'http://localhost:4000/fashionhub/';
+
 const config = defineConfig({
   testDir: './tests',
   fullyParallel: true,
@@ -13,7 +18,7 @@ const config = defineConfig({
   reporter: 'html',
   
   use: {
-    baseURL: 'http://localhost:4000/fashionhub/',
+    baseURL: baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     
@@ -25,26 +30,37 @@ const config = defineConfig({
   },
 
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
+    // {
+    //   name: 'chromium',
+    //   use: { ...devices['Desktop Chrome'] },
+    // },
+    // {
+    //   name: 'firefox',
+    //   use: { ...devices['Desktop Firefox'] },
+    // },
+    // {
+    //   name: 'webkit',
+    //   use: { ...devices['Desktop Safari'] },
+    // },
     {
       name: 'chrome',
       use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     },
   ],
+
+  // Only start webServer when running locally (not in Docker)
+  ...(isDocker ? {} : {
+    webServer: {
+      command: 'npm run start',
+      url: 'http://localhost:4000/fashionhub/',
+      reuseExistingServer: true, // Always reuse existing server to avoid EADDRINUSE errors
+      timeout: 120 * 1000, // 120 seconds
+    },
+  }),
 });
 
 console.log('📝 Test config loaded - baseURL:', config.use?.baseURL);
+console.log('🐳 Running in Docker:', isDocker);
 
 export default config;
 

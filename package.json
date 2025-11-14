@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "npx http-server ./ -p 4000",
     "test": "npx playwright test",
     "test:test": "npx playwright test --config=playwright-test.config.ts",
     "test:stage": "npx playwright test --config=playwright-stage.config.ts",
@@ -11,7 +12,12 @@
     "test:test:headed": "npx playwright test --config=playwright-test.config.ts --headed",
     "test:stage:headed": "npx playwright test --config=playwright-stage.config.ts --headed",
     "test:prod:headed": "npx playwright test --config=playwright-prod.config.ts --headed",
-    "test:debug": "npx playwright test --config=playwright-test.config.ts --debug"
+    "test:debug": "npx playwright test --config=playwright-test.config.ts --debug",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up --abort-on-container-exit",
+    "docker:down": "docker-compose down",
+    "docker:test": "docker-compose up --abort-on-container-exit --exit-code-from playwright-tests",
+    "docker:test:rebuild": "docker-compose up --build --abort-on-container-exit --exit-code-from playwright-tests"
   },
   "keywords": [],
   "author": "",

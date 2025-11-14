@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+playwright-report
+test-results
+.git
+.gitignore
+.vscode
+.DS_Store
+*.md
+!README.md
+.env
+.env.local
