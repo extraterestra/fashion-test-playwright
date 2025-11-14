@@ -49,6 +49,19 @@ pipeline {
     post {
         always {
             echo '📊 Processing test results...'
+                        // Copy artifacts out of the test container before tearing down
+                        sh '''
+                            set -e
+                            CID=$(docker compose -p "$COMPOSE_PROJECT_NAME" ps -q playwright-tests || true)
+                            if [ -n "$CID" ]; then
+                                echo "Copying artifacts from container: $CID"
+                                mkdir -p playwright-report test-results || true
+                                docker cp "$CID":/app/playwright-report ./playwright-report || true
+                                docker cp "$CID":/app/test-results ./test-results || true
+                            else
+                                echo "No playwright-tests container found to copy artifacts from."
+                            fi
+                        '''
             
             // Publish HTML reports (requires HTML Publisher plugin)
             publishHTML([

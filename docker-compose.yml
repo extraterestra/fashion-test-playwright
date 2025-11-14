@@ -2,7 +2,7 @@ services:
   # Web server service - pulls the FashionHub demo app
   fashionhub-app:
     image: pocketaces2/fashionhub-demo-app:latest
-    container_name: fashionhub-server
+    container_name: fashionhub-server-${COMPOSE_PROJECT_NAME}
     ports:
       - "4000:4000"
     networks:
@@ -19,7 +19,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: playwright-runner
+    container_name: playwright-runner-${COMPOSE_PROJECT_NAME}
     depends_on:
       fashionhub-app:
         condition: service_healthy
@@ -27,11 +27,6 @@ services:
       - CI=true
       - TEST_ENV=test
       - BASE_URL=http://fashionhub-app:4000/fashionhub/
-    volumes:
-      - ./tests:/app/tests
-      - ./page_objects:/app/page_objects
-      - ./playwright-report:/app/playwright-report
-      - ./test-results:/app/test-results
     networks:
       - test-network
     command: npm run test:test
