@@ -18,7 +18,7 @@ export class LoginPage extends BasePage {
     this.password = page.getByRole('textbox', { name: 'Password' });
     this.loginBtn = page.getByRole('button', { name: 'Login' });
     this.heading = page.getByRole('heading', { name: 'Login to FashionHub' });
-    this.alert = page.getByRole('alert');
+    this.alert = page.getByText('Invalid username or password.', { exact: true });
   }
 
   /**
