@@ -23,7 +23,7 @@ const config = defineConfig({
     
     // Production environment credentials (MUST be set via env vars for security)
     extraHTTPHeaders: {
-      'X-Test-User': process.env.PROD_USERNAME || 'demouser',
+      'X-Test-User': process.env.PROD_USERNAME || 'demouser1',
       'X-Test-Pass': process.env.PROD_PASSWORD || 'fashion123',
     },
   },
@@ -42,6 +42,6 @@ export default config;
 
 // Export credentials for use in fixtures
 export const testCredentials = {
-  username: process.env.PROD_USERNAME || 'demouser',
+  username: process.env.PROD_USERNAME || 'demouser1',
   password: process.env.PROD_PASSWORD || 'fashion123',
 };
