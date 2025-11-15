@@ -30,6 +30,9 @@ services:
     networks:
       - test-network
     command: npm run test:${TEST_ENV:-test}
+    volumes:
+      - ./playwright-report/:/app/playwright-report
+      - ./test-results/:/app/test-results
 
 networks:
   test-network:
