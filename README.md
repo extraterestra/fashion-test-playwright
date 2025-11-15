@@ -20,6 +20,7 @@ A comprehensive end-to-end test suite for the FashionHub application built with 
 - [Test Examples](#test-examples)
 - [Debugging Tests](#debugging-tests)
 - [CI/CD Integration](#cicd-integration)
+  - [Jenkins Pipeline](#jenkins-pipeline)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -814,6 +815,60 @@ jobs:
           path: playwright-report/
           retention-days: 30
 ```
+
+### Jenkins Pipeline
+
+The repository ships with a parameterized Jenkins pipeline (`Jenkinsfile`) allowing runs against **test**, **stage**, or **prod** via a dropdown.
+
+#### Parameter Mapping
+| ENVIRONMENT | Executed npm Script | Config File | Target Base URL |
+|-------------|---------------------|-------------|-----------------|
+| test        | `npm run test:test` | `playwright-test.config.ts`  | Docker: `http://fashionhub-app:4000/fashionhub/` (locally: `http://localhost:4000/fashionhub/`) |
+| stage       | `npm run test:stage`| `playwright-stage.config.ts` | `https://staging-env/fashionhub/` |
+| prod        | `npm run test:prod` | `playwright-prod.config.ts`  | `https://pocketaces2.github.io/fashionhub/` |
+
+#### Usage Steps
+1. Create a Pipeline job pointing to this repo (SCM: Git, branch `main`).
+2. Run once (Build Now) so Jenkins loads parameters from Jenkinsfile.
+3. Click **Build with Parameters** (now visible).
+4. Select `ENVIRONMENT` (default: test) and press **Build**.
+5. View console log; HTML report published at end (Playwright Test Report link).
+
+#### Artifacts
+The pipeline copies `playwright-report/` and `test-results/` out of the container before `docker compose down`. If a report is missing, check log for: `Copying artifacts from container:`.
+
+#### Separate Jobs (Optional)
+Instead of one parameterized job you may create three jobs and set a default parameter value (`ENVIRONMENT=test|stage|prod`). The same Jenkinsfile works unchanged.
+
+#### Troubleshooting Quick Table
+| Symptom | Likely Cause | Resolution |
+|---------|--------------|------------|
+| `docker: not found` | Jenkins image missing Docker CLI | Rebuild using `jenkins.Dockerfile` & mount `/var/run/docker.sock` |
+| HTML report missing | Container removed before copy or tests failed early | Ensure copy step ran; inspect test container logs |
+| `No tests found` | Old bind mounts overwrote test folder | Use current compose (no test volume mounts) |
+| Container name conflict | Fixed names persisted between builds | Dynamic names via `${COMPOSE_PROJECT_NAME}` already implemented |
+| Parameter dropdown absent | First build not yet executed | Run one build; then it appears |
+
+#### Manual Diagnostics (Inside Jenkins)
+```bash
+# List containers for current build project
+docker compose -p fashion-playwright-<BUILD_NUMBER> ps
+
+# Get test runner logs
+docker logs $(docker compose -p fashion-playwright-<BUILD_NUMBER> ps -q playwright-tests)
+
+# Manually copy report if needed
+CID=$(docker compose -p fashion-playwright-<BUILD_NUMBER> ps -q playwright-tests)
+docker cp "$CID":/app/playwright-report ./playwright-report
+```
+
+#### Best Practices
+1. Prefer single parameterized job.
+2. Avoid host bind mounts for test code in CI.
+3. Keep production runs serial (already configured).
+4. Publish reports even on failure for debugging.
+5. Use the environment-specific configs rather than `TEST_ENV` legacy mode.
+
 
 ### Running Tests in CI
 
