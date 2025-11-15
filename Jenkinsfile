@@ -1,9 +1,17 @@
 pipeline {
     agent any
     
+    parameters {
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['test', 'stage', 'prod'],
+            description: 'Select the environment to run tests against'
+        )
+    }
+    
     environment {
         COMPOSE_PROJECT_NAME = "fashion-playwright-${BUILD_NUMBER}"
-        TEST_ENV = 'test'
+        TEST_ENV = "${params.ENVIRONMENT}"
     }
     
     options {
@@ -40,8 +48,11 @@ pipeline {
         
         stage('Run Tests in Docker') {
             steps {
-                echo '🧪 Running Playwright tests in Docker containers...'
-                sh 'docker compose -p "$COMPOSE_PROJECT_NAME" up --build --abort-on-container-exit --exit-code-from playwright-tests'
+                echo "🧪 Running Playwright tests in Docker containers (Environment: ${params.ENVIRONMENT})..."
+                sh '''
+                    # Run tests with selected environment
+                    docker compose -p "$COMPOSE_PROJECT_NAME" up --build --abort-on-container-exit --exit-code-from playwright-tests
+                '''
             }
         }
     }
@@ -49,19 +60,22 @@ pipeline {
     post {
         always {
             echo '📊 Processing test results...'
-                        // Copy artifacts out of the test container before tearing down
-                        sh '''
-                            set -e
-                            CID=$(docker compose -p "$COMPOSE_PROJECT_NAME" ps -q playwright-tests || true)
-                            if [ -n "$CID" ]; then
-                                echo "Copying artifacts from container: $CID"
-                                mkdir -p playwright-report test-results || true
-                                docker cp "$CID":/app/playwright-report ./playwright-report || true
-                                docker cp "$CID":/app/test-results ./test-results || true
-                            else
-                                echo "No playwright-tests container found to copy artifacts from."
-                            fi
-                        '''
+            // Copy artifacts from the stopped (but not yet removed) test container
+            sh '''
+                set +e
+                # Find container by name pattern (stopped containers still exist until 'down')
+                CID=$(docker ps -a --filter "name=playwright-runner-${COMPOSE_PROJECT_NAME}" --format "{{.ID}}" | head -1)
+                if [ -n "$CID" ]; then
+                    echo "Copying artifacts from container: $CID"
+                    mkdir -p playwright-report test-results
+                    docker cp "$CID":/app/playwright-report/. ./playwright-report/ 2>/dev/null || echo "No playwright-report found"
+                    docker cp "$CID":/app/test-results/. ./test-results/ 2>/dev/null || echo "No test-results found"
+                    ls -la playwright-report/ || echo "playwright-report is empty"
+                    ls -la test-results/ || echo "test-results is empty"
+                else
+                    echo "No playwright-tests container found to copy artifacts from."
+                fi
+            '''
             
             // Publish HTML reports (requires HTML Publisher plugin)
             publishHTML([

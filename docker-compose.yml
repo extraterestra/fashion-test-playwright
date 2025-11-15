@@ -25,11 +25,11 @@ services:
         condition: service_healthy
     environment:
       - CI=true
-      - TEST_ENV=test
+      - TEST_ENV=${TEST_ENV:-test}
       - BASE_URL=http://fashionhub-app:4000/fashionhub/
     networks:
       - test-network
-    command: npm run test:test
+    command: npm run test:${TEST_ENV:-test}
 
 networks:
   test-network:
