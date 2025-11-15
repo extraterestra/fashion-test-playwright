@@ -88,6 +88,9 @@ pipeline {
                 reportTitles: 'Playwright Test Results'
             ])
             
+            // Publish JUnit test results (for Test Result Trend)
+            junit allowEmptyResults: true, testResults: 'test-results/junit-results.xml'
+            
             // Archive test results
             archiveArtifacts artifacts: 'playwright-report/**/*,test-results/**/*', allowEmptyArchive: true
             

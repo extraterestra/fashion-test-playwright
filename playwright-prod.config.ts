@@ -10,7 +10,10 @@ const config = defineConfig({
   forbidOnly: true,
   retries: 2,
   workers: 1,
-  reporter: 'html',
+  reporter: [
+    ['html', { outputFolder: 'playwright-report', open: 'never' }],
+    ['junit', { outputFile: 'test-results/junit-results.xml' }],
+  ],
   
   use: {
     baseURL: 'https://pocketaces2.github.io/fashionhub/',
