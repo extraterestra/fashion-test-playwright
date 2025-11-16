@@ -76,4 +76,19 @@ export class LoginPage extends BasePage {
     if ((await this.getCount(this.alert)) === 0) return null;
     return (await this.getText(this.alert.first())) ?? null;
   }
+
+  /**
+   * Verify login failed by checking heading is still visible and alert appears.
+   * @returns Promise<void>
+   */
+  async verifyLoginFailed(): Promise<void> {
+    const headingVisible = await this.isVisible(this.heading);
+    if (!headingVisible) {
+      throw new Error('Login heading is not visible - user may have logged in');
+    }
+    const hasAlert = await this.hasAlert();
+    if (!hasAlert) {
+      throw new Error('Alert message is not visible');
+    }
+  }
 }

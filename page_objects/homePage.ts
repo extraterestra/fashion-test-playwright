@@ -7,10 +7,12 @@ import { BasePage } from './basePage';
  */
 export class HomePage extends BasePage {
   readonly loginHeading: Locator;
+  readonly welcomeMsg: Locator;
 
   constructor(page: any) {
     super(page);
     this.loginHeading = page.getByRole('heading', { name: 'Login to FashionHub' });
+    this.welcomeMsg = page.getByText('Welcome, testUser!', { exact: true });
   }
 
   /**
@@ -39,5 +41,28 @@ export class HomePage extends BasePage {
    */
   async getLoginHeadingCount(): Promise<number> {
     return await this.getCount(this.loginHeading);
+  }
+
+  /**
+   * Check if an welcome message is present on the page.
+   * @returns boolean - true if welcome message element is visible
+   */
+  async hasWelcomeMessage(): Promise<boolean> {
+    return (await this.getCount(this.welcomeMsg)) > 0;
+  }
+
+  /**
+   * Verify user is logged in by checking login heading is gone and welcome message appears.
+   * @returns Promise<void>
+   */
+  async verifyUserLoggedIn(): Promise<void> {
+    const isLoggedIn = await this.isLoggedIn();
+    if (!isLoggedIn) {
+      throw new Error('User is not logged in - login heading is still visible');
+    }
+    const hasWelcome = await this.hasWelcomeMessage();
+    if (!hasWelcome) {
+      throw new Error('Welcome message is not visible');
+    }
   }
 }

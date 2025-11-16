@@ -5,23 +5,24 @@ test.describe('Login page', () => {
     await loginPage.goto();
   });
 
-  test('Happy path — Successful login', async ({ loginPage, homePage, testUser }) => {
-    // Use testUser fixture for environment-specific credentials
-    await loginPage.submitCredentials(testUser.username, testUser.password);
-    console.log(`Logging in as ${testUser.username}`);
-    console.log(`With password ${testUser.password}`);
-    await expect(loginPage.heading).toHaveCount(0);
-    expect(await homePage.isLoggedIn()).toBe(true);
-    await expect(loginPage.page.getByText('Welcome, testUser!')).toBeVisible();
+  test('Happy path — Successful login', async ({ performValidLogin, homePage }) => {
+    await test.step('Fill valid credentials', async () => {
+      await performValidLogin();
+    });
+
+    await test.step('Verify user is logged in', async () => {
+      await homePage.verifyUserLoggedIn();
+    });
   });
 
-  test('Negative — Incorrect password', async ({ loginPage, testUser }) => {
-    await loginPage.fillCredentials(testUser.username, 'wrongpassword');
-    await loginPage.loginBtn.click();
-    await loginPage.page.waitForLoadState('networkidle');
-    await expect(loginPage.heading).toBeVisible();
-    if (await loginPage.hasAlert()) {
-      await expect(loginPage.alert.first()).toBeVisible();
-    }
+  test('Negative — Incorrect password', async ({ performInvalidLogin, loginPage, homePage }) => {
+    await test.step('Login with incorrect password', async () => {
+      await performInvalidLogin();
+    });
+
+    await test.step('Verify alert and user not logged in', async () => {
+      await loginPage.verifyLoginFailed();
+      expect(await homePage.isLoggedIn()).toBe(false);
+    });
   });
 });

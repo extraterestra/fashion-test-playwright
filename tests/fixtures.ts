@@ -28,6 +28,8 @@ type MyFixtures = {
   loginPage: LoginPage;
   homePage: HomePage;
   testUser: { username: string; password: string };
+  performValidLogin: () => Promise<void>;
+  performInvalidLogin: () => Promise<void>;
 };
 
 export const test = base.extend<MyFixtures>({
@@ -47,6 +49,22 @@ export const test = base.extend<MyFixtures>({
   homePage: async ({ page }, use) => {
     const homePage = new HomePage(page);
     await use(homePage);
+  },
+
+  // performValidLogin fixture - encapsulates login with valid credentials
+  performValidLogin: async ({ loginPage, testUser }, use) => {
+    await use(async () => {
+      await loginPage.submitCredentials(testUser.username, testUser.password);
+    });
+  },
+
+  // performInvalidLogin fixture - encapsulates login with invalid credentials
+  performInvalidLogin: async ({ loginPage, testUser }, use) => {
+    await use(async () => {
+      await loginPage.fillCredentials(testUser.username, 'wrongpassword');
+      await loginPage.loginBtn.click();
+      await loginPage.page.waitForLoadState('networkidle');
+    });
   },
 });
 
