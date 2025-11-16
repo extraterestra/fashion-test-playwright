@@ -25,4 +25,18 @@ test.describe('Login page', () => {
       expect(await homePage.isLoggedIn()).toBe(false);
     });
   });
+
+  test('Negative — Empty username', async ({ loginPage, testUser }) => {
+    await test.step('Submit form with empty username', async () => {
+      // Fill password but leave username empty
+      await loginPage.password.fill(testUser.password);
+      await loginPage.loginBtn.click();
+    });
+
+    await test.step('Verify validation message appears', async () => {
+      // Check the HTML5 validation message
+      const validationMessage = await loginPage.username.evaluate((el: HTMLInputElement) => el.validationMessage);
+      expect(validationMessage).toBe('Please fill out this field.');
+    });
+  });
 });
