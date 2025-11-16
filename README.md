@@ -103,13 +103,15 @@ fashion-test-playwright/
 │   └── homePage.ts              # Home/dashboard page object
 ├── tests/
 │   ├── fixtures.ts              # Custom Playwright test fixtures
-│   ├── login.spec.ts            # Login tests
-│   ├── seed.spec.ts             # Seed/setup tests
-│   └── example.spec.ts          # Example tests
+│   └── login.spec.ts            # Login tests
 ├── playwright.config.ts         # Dynamic config router
 ├── playwright-test.config.ts    # Test environment configuration
 ├── playwright-stage.config.ts   # Staging environment configuration
 ├── playwright-prod.config.ts    # Production environment configuration
+├── Dockerfile                   # Docker image for Playwright tests
+├── docker-compose.yml           # Orchestrates app and test containers
+├── Jenkinsfile                  # Jenkins CI/CD pipeline
+├── jenkins.Dockerfile           # Jenkins image with Docker CLI
 ├── package.json                 # Dependencies and scripts
 ├── playwright-report/           # Test reports (generated)
 ├── test-results/                # Test results (generated)
@@ -409,6 +411,8 @@ export { expect };
 | `loginPage` | `LoginPage` | Login page object (call `.goto()` to navigate) | ✅ Yes |
 | `homePage` | `HomePage` | Home/dashboard page object | ✅ Yes |
 | `testUser` | `{ username, password }` | Environment-specific test credentials | ✅ Yes |
+| `performValidLogin` | `() => Promise<void>` | Executes login with valid credentials | ✅ Yes |
+| `performInvalidLogin` | `() => Promise<void>` | Executes login with invalid password | ✅ Yes |
 | `page` | `Page` | Playwright page instance (built-in) | ✅ Yes |
 | `context` | `BrowserContext` | Browser context (built-in) | ✅ Yes |
 | `browser` | `Browser` | Browser instance (built-in) | ✅ Yes |
@@ -609,12 +613,14 @@ test.describe('Login page', () => {
     await loginPage.goto();
   });
 
-  test('Happy path — Successful login', async ({ loginPage, homePage, testUser }) => {
-    // testUser fixture provides environment-specific credentials
-    await loginPage.submitCredentials(testUser.username, testUser.password);
+  test('Happy path — Successful login', async ({ performValidLogin, homePage }) => {
+    await test.step('Fill valid credentials', async () => {
+      await performValidLogin();
+    });
 
-    await expect(loginPage.heading).toHaveCount(0);
-    expect(await homePage.isLoggedIn()).toBe(true);
+    await test.step('Verify user is logged in', async () => {
+      await homePage.verifyUserLoggedIn();
+    });
   });
 });
 ```
@@ -629,17 +635,15 @@ test.describe('Login page', () => {
     await loginPage.goto();
   });
 
-  test('Negative — Incorrect password', async ({ loginPage, testUser }) => {
-    // Use testUser for username, but wrong password
-    await loginPage.fillCredentials(testUser.username, 'wrongpassword');
-    await loginPage.loginBtn.click();
-    await loginPage.page.waitForLoadState('networkidle');
+  test('Negative — Incorrect password', async ({ performInvalidLogin, loginPage, homePage }) => {
+    await test.step('Login with incorrect password', async () => {
+      await performInvalidLogin();
+    });
 
-    await expect(loginPage.heading).toBeVisible();
-    
-    if (await loginPage.hasAlert()) {
-      await expect(loginPage.alert.first()).toBeVisible();
-    }
+    await test.step('Verify alert and user not logged in', async () => {
+      await loginPage.verifyLoginFailed();
+      expect(await homePage.isLoggedIn()).toBe(false);
+    });
   });
 });
 ```
@@ -771,50 +775,6 @@ npm run test:test -- --verbose
 ---
 
 ## CI/CD Integration
-
-### GitHub Actions Example
-
-Create `.github/workflows/playwright.yml`:
-
-```yaml
-name: Playwright Tests
-
-on:
-  push:
-    branches: [ main, develop ]
-  pull_request:
-    branches: [ main ]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        env: [test, stage, prod]
-    
-    steps:
-      - uses: actions/checkout@v3
-      
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      
-      - run: npm install
-      
-      - run: npx playwright install --with-deps
-      
-      - run: npm run test:${{ matrix.env }}
-        env:
-          TEST_ENV: ${{ matrix.env }}
-      
-      - uses: actions/upload-artifact@v3
-        if: always()
-        with:
-          name: playwright-report-${{ matrix.env }}
-          path: playwright-report/
-          retention-days: 30
-```
 
 ### Jenkins Pipeline
 
