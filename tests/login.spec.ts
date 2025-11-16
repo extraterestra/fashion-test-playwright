@@ -39,4 +39,18 @@ test.describe('Login page', () => {
       expect(validationMessage).toBe('Please fill out this field.');
     });
   });
+
+  test('Negative — Empty password', async ({ loginPage, testUser }) => {
+    await test.step('Submit form with empty password', async () => {
+      // Fill username but leave password empty
+      await loginPage.username.fill(testUser.username);
+      await loginPage.loginBtn.click();
+    });
+
+    await test.step('Verify validation message appears', async () => {
+      // Check the HTML5 validation message
+      const validationMessage = await loginPage.password.evaluate((el: HTMLInputElement) => el.validationMessage);
+      expect(validationMessage).toBe('Please fill out this field.');
+    });
+  });
 });
