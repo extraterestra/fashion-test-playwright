@@ -103,7 +103,9 @@ fashion-test-playwright/
 │   └── homePage.ts              # Home/dashboard page object
 ├── tests/
 │   ├── fixtures.ts              # Custom Playwright test fixtures
-│   └── login.spec.ts            # Login tests
+│   ├── login.spec.ts            # Login tests
+│   ├── console.spec.ts          # Console error checks (home/about pages)
+│   └── links.spec.ts            # Link crawler: asserts 200/30x, no 40x
 ├── playwright.config.ts         # Dynamic config router
 ├── playwright-test.config.ts    # Test environment configuration
 ├── playwright-stage.config.ts   # Staging environment configuration
