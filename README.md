@@ -33,11 +33,11 @@ This test suite provides automated end-to-end testing for the FashionHub applica
 - **Production**: `https://pocketaces2.github.io/fashionhub/`
 
 ### Key Features
-✅ **Multi-environment support** — easily switch between test, staging, and production  
-✅ **Page Object Model** — organized, maintainable test code  
-✅ **Parameterized methods** — reusable test utilities  
-✅ **Cross-platform compatibility** — works on Windows, macOS, and Linux  
-✅ **Comprehensive reporting** — HTML test reports and trace files  
+**Multi-environment support** — easily switch between test, staging, and production  
+**Page Object Model** — organized, maintainable test code  
+**Parameterized methods** — reusable test utilities  
+**Cross-platform compatibility** — works on Windows, macOS, and Linux  
+**Comprehensive reporting** — HTML test reports and trace files  
 
 ---
 
@@ -156,12 +156,12 @@ The project uses **separate configuration files per environment** for better iso
 
 ### Benefits of Per-Environment Configs
 
-✅ **Isolated configuration** - Each environment has its own settings
-✅ **Different browser sets** - Production runs only on Chrome, test runs on all browsers
-✅ **Custom retry logic** - Production has more retries, test has none
-✅ **Environment-specific credentials** - Separate credentials per environment
-✅ **Optimized workers** - Production runs serially, test/stage run in parallel
-✅ **Explicit control** - Use `--config` flag to specify exact environment
+**Isolated configuration** - Each environment has its own settings
+**Different browser sets** - Production runs only on Chrome, test runs on all browsers
+**Custom retry logic** - Production has more retries, test has none
+**Environment-specific credentials** - Separate credentials per environment
+**Optimized workers** - Production runs serially, test/stage run in parallel
+**Explicit control** - Use `--config` flag to specify exact environment
 
 ---
 
@@ -410,20 +410,20 @@ export { expect };
 
 | Fixture | Type | Description | Auto-initialized |
 |---------|------|-------------|------------------|
-| `loginPage` | `LoginPage` | Login page object (call `.goto()` to navigate) | ✅ Yes |
-| `homePage` | `HomePage` | Home/dashboard page object | ✅ Yes |
-| `testUser` | `{ username, password }` | Environment-specific test credentials | ✅ Yes |
-| `performValidLogin` | `() => Promise<void>` | Executes login with valid credentials | ✅ Yes |
-| `performInvalidLogin` | `() => Promise<void>` | Executes login with invalid password | ✅ Yes |
-| `page` | `Page` | Playwright page instance (built-in) | ✅ Yes |
-| `context` | `BrowserContext` | Browser context (built-in) | ✅ Yes |
-| `browser` | `Browser` | Browser instance (built-in) | ✅ Yes |
+| `loginPage` | `LoginPage` | Login page object (call `.goto()` to navigate) | Yes |
+| `homePage` | `HomePage` | Home/dashboard page object | Yes |
+| `testUser` | `{ username, password }` | Environment-specific test credentials | Yes |
+| `performValidLogin` | `() => Promise<void>` | Executes login with valid credentials | Yes |
+| `performInvalidLogin` | `() => Promise<void>` | Executes login with invalid password | Yes |
+| `page` | `Page` | Playwright page instance (built-in) | Yes |
+| `context` | `BrowserContext` | Browser context (built-in) | Yes |
+| `browser` | `Browser` | Browser instance (built-in) | Yes |
 
 ### Using Fixtures in Tests
 
 Instead of manually creating page objects in every test:
 
-**❌ Without Fixtures (verbose):**
+** Without Fixtures (verbose):**
 ```typescript
 import { test, expect } from '@playwright/test';
 import { LoginPage } from '../pages/loginPage';
@@ -439,7 +439,7 @@ test('Login test', async ({ page }) => {
 });
 ```
 
-**✅ With Fixtures (clean):**
+** With Fixtures (clean):**
 ```typescript
 import { test, expect } from './fixtures';
 

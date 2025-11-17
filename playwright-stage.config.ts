@@ -39,7 +39,7 @@ const config = defineConfig({
   ],
 });
 
-console.log('📝 Stage config loaded - baseURL:', config.use?.baseURL);
+console.log('Stage config loaded - baseURL:', config.use?.baseURL);
 
 export default config;
 

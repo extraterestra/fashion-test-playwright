@@ -23,14 +23,14 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo '📦 Checking out code from GitHub...'
+                echo 'Checking out code from GitHub...'
                 checkout scm
             }
         }
         
         stage('Environment Info') {
             steps {
-                echo '🔍 Environment Information'
+                echo 'Environment Information'
                 sh 'pwd'
                 sh 'ls -la'
                 sh 'docker --version || echo "Docker not available"'
@@ -40,7 +40,7 @@ pipeline {
         
         stage('Clean Previous Docker Containers') {
             steps {
-                echo '🧹 Cleaning up previous Docker containers...'
+                echo 'Cleaning up previous Docker containers...'
                 sh 'docker compose -p "$COMPOSE_PROJECT_NAME" down --remove-orphans || true'
                 sh 'docker image prune -f || true'
             }
@@ -48,7 +48,7 @@ pipeline {
         
         stage('Run Tests in Docker') {
             steps {
-                echo "🧪 Running Playwright tests in Docker containers (Environment: ${params.ENVIRONMENT})..."
+                echo "Running Playwright tests in Docker containers (Environment: ${params.ENVIRONMENT})..."
                 sh '''
                     # Run tests with selected environment
                     docker compose -p "$COMPOSE_PROJECT_NAME" up --build --abort-on-container-exit --exit-code-from playwright-tests
@@ -59,7 +59,7 @@ pipeline {
     
     post {
         always {
-            echo '📊 Processing test results...'
+            echo 'Processing test results...'
             // Copy artifacts from the stopped (but not yet removed) test container
             sh '''
                 set +e
@@ -99,11 +99,11 @@ pipeline {
         }
         
         success {
-            echo '✅ Pipeline completed successfully!'
+            echo 'Pipeline completed successfully!'
         }
         
         failure {
-            echo '❌ Pipeline failed!'
+            echo 'Pipeline failed!'
         }
     }
 }

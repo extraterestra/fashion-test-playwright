@@ -16,7 +16,7 @@ const getCredentials = () => {
     }
   } catch (error) {
     // Fallback to default credentials
-    console.warn('⚠️  Could not load credentials from config, using defaults');
+    console.warn('Could not load credentials from config, using defaults');
     return {
       username: 'demouser',
       password: 'fashion123',

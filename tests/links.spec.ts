@@ -39,14 +39,14 @@ test.describe('Link Status Codes', () => {
         results.push({ url: absoluteUrl, status, success: isValid });
 
         if (is4xx) {
-          console.error(`❌ 40x Error - ${absoluteUrl}: ${status}`);
+          console.error(`40x Error - ${absoluteUrl}: ${status}`);
         } else if (isValid) {
-          console.log(`✅ Valid - ${absoluteUrl}: ${status}`);
+          console.log(`Valid - ${absoluteUrl}: ${status}`);
         } else {
-          console.warn(`⚠️  Unexpected - ${absoluteUrl}: ${status}`);
+          console.warn(`Unexpected - ${absoluteUrl}: ${status}`);
         }
       } catch (error) {
-        console.error(`❌ Failed to load ${absoluteUrl}:`, error instanceof Error ? error.message : error);
+        console.error(`Failed to load ${absoluteUrl}:`, error instanceof Error ? error.message : error);
         results.push({ url: absoluteUrl, status: 0, success: false });
       }
     }

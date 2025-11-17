@@ -36,7 +36,7 @@ const config = defineConfig({
   ],
 });
 
-console.log('📝 Prod config loaded - baseURL:', config.use?.baseURL);
+console.log('Prod config loaded - baseURL:', config.use?.baseURL);
 
 export default config;
 

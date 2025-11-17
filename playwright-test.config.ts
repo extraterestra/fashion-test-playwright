@@ -48,18 +48,18 @@ const config = defineConfig({
   ],
 
   // Only start webServer when running locally (not in Docker)
-  ...(isDocker ? {} : {
-    webServer: {
-      command: 'npm run start',
-      url: 'http://localhost:4000/fashionhub/',
-      reuseExistingServer: true, // Always reuse existing server to avoid EADDRINUSE errors
-      timeout: 120 * 1000, // 120 seconds
-    },
-  }),
+  // ...(isDocker ? {} : {
+  //   webServer: {
+  //     command: 'npm run start',
+  //     url: 'http://localhost:4000/fashionhub/',
+  //     reuseExistingServer: true, // Always reuse existing server to avoid EADDRINUSE errors
+  //     timeout: 120 * 1000, // 120 seconds
+  //   },
+  // }),
 });
 
-console.log('📝 Test config loaded - baseURL:', config.use?.baseURL);
-console.log('🐳 Running in Docker:', isDocker);
+console.log('Test config loaded - baseURL:', config.use?.baseURL);
+console.log('Running in Docker:', isDocker);
 
 export default config;
 
