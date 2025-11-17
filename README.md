@@ -313,6 +313,96 @@ TEST_ENV=test npx playwright test --ui
 
 ---
 
+## Running Tests in Docker
+
+Docker provides a consistent environment for running tests. The project includes a `docker-compose.yml` that orchestrates both the FashionHub app and Playwright tests.
+
+### Quick Start with Docker
+
+#### Test Environment (localhost in Docker):
+```bash
+docker-compose up --abort-on-container-exit --exit-code-from playwright-tests
+```
+
+Or rebuild and run:
+```bash
+docker-compose up --build --abort-on-container-exit --exit-code-from playwright-tests
+```
+
+This will:
+1. Start the FashionHub app container on port 4000
+2. Wait for the app to be healthy
+3. Run tests against `http://fashionhub-app:4000/fashionhub/`
+4. Exit when tests complete
+
+#### Staging Environment:
+```bash
+TEST_ENV=stage docker-compose up --abort-on-container-exit --exit-code-from playwright-tests
+```
+
+Or run without starting the app container (staging uses external URL):
+```bash
+TEST_ENV=stage docker-compose run --rm playwright-tests npx playwright test
+```
+
+#### Production Environment:
+```bash
+TEST_ENV=prod docker-compose up --abort-on-container-exit --exit-code-from playwright-tests
+```
+
+Or run only the test container (prod uses external URL):
+```bash
+TEST_ENV=prod docker-compose run --rm playwright-tests npx playwright test
+```
+
+### Docker Examples
+
+#### Run specific test file in Docker:
+```bash
+docker-compose run --rm playwright-tests npx playwright test tests/login.spec.ts
+```
+
+#### Run specific test by name in Docker:
+```bash
+docker-compose run --rm playwright-tests npx playwright test -g "Happy path"
+```
+
+#### Run specific project (browser) in Docker:
+```bash
+docker-compose run --rm playwright-tests npx playwright test --project=chromium
+```
+
+#### Run on production with specific test:
+```bash
+TEST_ENV=prod docker-compose run --rm playwright-tests npx playwright test tests/login.spec.ts --project=chromium
+```
+
+#### Run with verbose output in Docker:
+```bash
+docker-compose run --rm playwright-tests npx playwright test --verbose
+```
+
+### Docker Cleanup
+
+Stop and remove containers:
+```bash
+docker-compose down
+```
+
+Remove containers and volumes:
+```bash
+docker-compose down -v
+```
+
+### Viewing Reports After Docker Run
+
+After running tests in Docker, reports are copied to the host:
+```bash
+npx playwright show-report
+```
+
+---
+
 ## Environment Variables
 
 ### Setting Environment Variables
