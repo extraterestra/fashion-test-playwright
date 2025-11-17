@@ -97,7 +97,7 @@ npx playwright install chromium firefox webkit
 
 ```
 fashion-test-playwright/
-├── page_objects/                 # Page Object classes
+├── pages/                        # Page Object classes
 │   ├── basePage.ts              # Base page with shared utilities
 │   ├── loginPage.ts             # Login page object
 │   └── homePage.ts              # Home/dashboard page object
@@ -383,8 +383,8 @@ The project includes custom fixtures that automatically create and initialize pa
 
 ```typescript
 import { test as base, expect } from '@playwright/test';
-import { LoginPage } from '../page_objects/loginPage';
-import { HomePage } from '../page_objects/homePage';
+import { LoginPage } from '../pages/loginPage';
+import { HomePage } from '../pages/homePage';
 
 type MyFixtures = {
   loginPage: LoginPage;
@@ -426,8 +426,8 @@ Instead of manually creating page objects in every test:
 **❌ Without Fixtures (verbose):**
 ```typescript
 import { test, expect } from '@playwright/test';
-import { LoginPage } from '../page_objects/loginPage';
-import { HomePage } from '../page_objects/homePage';
+import { LoginPage } from '../pages/loginPage';
+import { HomePage } from '../pages/homePage';
 
 test('Login test', async ({ page }) => {
   const loginPage = new LoginPage(page);
@@ -466,7 +466,7 @@ To add more fixtures (e.g., for a ProductPage):
 1. **Update `tests/fixtures.ts`:**
 
 ```typescript
-import { ProductPage } from '../page_objects/productPage';
+import { ProductPage } from '../pages/productPage';
 
 type MyFixtures = {
   loginPage: LoginPage;
@@ -558,7 +558,7 @@ export const test = base.extend<MyFixtures>({
 
 The test suite uses the **Page Object Model (POM)** pattern for maintainable and reusable test code.
 
-### BasePage (`page_objects/basePage.ts`)
+### BasePage (`pages/basePage.ts`)
 
 Base class with common utilities inherited by all page objects:
 
@@ -572,7 +572,7 @@ Base class with common utilities inherited by all page objects:
 - `waitForURL(pattern)` — wait for URL to match pattern
 - `waitForLoadState(state)` — wait for page load state
 
-### LoginPage (`page_objects/loginPage.ts`)
+### LoginPage (`pages/loginPage.ts`)
 
 Login form page object with methods:
 
@@ -590,7 +590,7 @@ Login form page object with methods:
 - `heading` — page heading
 - `alert` — error alert element
 
-### HomePage (`page_objects/homePage.ts`)
+### HomePage (`pages/homePage.ts`)
 
 Home/dashboard page object with methods:
 
@@ -656,8 +656,8 @@ If you prefer not to use fixtures, you can manually create page objects:
 
 ```typescript
 import { test, expect } from '@playwright/test';
-import { LoginPage } from '../page_objects/loginPage';
-import { HomePage } from '../page_objects/homePage';
+import { LoginPage } from '../pages/loginPage';
+import { HomePage } from '../pages/homePage';
 
 test('Manual setup example', async ({ page }) => {
   const login = new LoginPage(page);
@@ -858,16 +858,16 @@ TEST_ENV=prod npm run test:prod
 TEST_ENV=prod npx playwright test --verbose
 ```
 
-### Issue: "Cannot find module 'page_objects'"
+### Issue: "Cannot find module 'pages'"
 
-**Solution:** Ensure `page_objects/` folder is at the project root and imports use relative paths:
+**Solution:** Ensure `pages/` folder is at the project root and imports use relative paths:
 
 ```typescript
 // Correct:
-import { LoginPage } from '../page_objects/loginPage';
+import { LoginPage } from '../pages/loginPage';
 
 // Incorrect:
-import { LoginPage } from './page_objects/loginPage';
+import { LoginPage } from './pages/loginPage';
 ```
 
 ### Issue: "Element not found" or "Timeout exceeded"

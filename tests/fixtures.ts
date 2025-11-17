@@ -1,6 +1,6 @@
 import { test as base, expect } from '@playwright/test';
-import { LoginPage } from '../page_objects/loginPage';
-import { HomePage } from '../page_objects/homePage';
+import { LoginPage } from '../pages/loginPage';
+import { HomePage } from '../pages/homePage';
 
 // Dynamic import of credentials based on TEST_ENV
 const getCredentials = () => {
