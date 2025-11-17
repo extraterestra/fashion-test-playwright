@@ -80,16 +80,6 @@ const config = defineConfig({
   },
 
   projects,
-
-  // Start web server only for local test env
-  ...(env === 'test' && !isDocker ? {
-    webServer: {
-      command: "sh -c 'curl -s -o /dev/null -w \"%{http_code}\" http://localhost:4000/fashionhub/ | grep -qE \"^(2|3)\" || npx http-server ./ -p 4000'",
-      url: 'http://localhost:4000/fashionhub/',
-      reuseExistingServer: true,
-      timeout: 120 * 1000,
-    },
-  } : {}),
 });
 
 console.log(`Env: ${env} | baseURL: ${baseURL} | isDocker: ${isDocker}`);

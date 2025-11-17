@@ -14,11 +14,13 @@ A comprehensive end-to-end test suite for the FashionHub application built with 
   - [Run on Staging Environment](#run-on-staging-environment)
   - [Run on Production Environment](#run-on-production-environment)
   - [Run with Custom Parameters](#run-with-custom-parameters)
+- [Running Tests in Docker](#running-tests-in-docker)
 - [Environment Variables](#environment-variables)
 - [Test Fixtures](#test-fixtures)
 - [Page Objects](#page-objects)
 - [Test Examples](#test-examples)
 - [Debugging Tests](#debugging-tests)
+- [Common Commands Reference](#common-commands-reference)
 - [CI/CD Integration](#cicd-integration)
   - [Jenkins Pipeline](#jenkins-pipeline)
 - [Troubleshooting](#troubleshooting)
@@ -180,15 +182,21 @@ npm run test:prod
 
 ### Run on Test Environment
 
-The test environment targets localhost and automatically starts a local web server.
+The test environment targets `http://localhost:4000/fashionhub/`.
 
-#### Using npm script (Recommended):
+**⚠️ Important:** When running locally (without Docker), you **must start the webserver manually** before running tests.
+
+#### Start the local webserver:
 ```bash
-npm run test:test
+npm run start
 ```
 
-#### Using TEST_ENV directly:
+#### Then run tests in another terminal:
 ```bash
+# Using npm script
+npm run test:test
+
+# Or using TEST_ENV directly
 TEST_ENV=test npx playwright test
 ```
 
@@ -1005,23 +1013,145 @@ Using baseURL: https://pocketaces2.github.io/fashionhub/
 
 ## Common Commands Reference
 
+### Local Runs (Without Docker)
+
+**⚠️ Note:** For test environment, start the local server first with `npm run start` in a separate terminal.
+
+#### Run all tests on specific environment:
+```bash
+# Test environment (requires manual server: npm run start)
+npm run test:test
+
+# Staging environment
+npm run test:stage
+
+# Production environment
+npm run test:prod
+```
+
+#### Run specific browser:
+```bash
+# Chromium only
+npm run test:test -- --project=chromium
+
+# Firefox only
+npm run test:stage -- --project=firefox
+
+# WebKit only (test env)
+npm run test:test -- --project=webkit
+```
+
+#### Run specific test file:
+```bash
+# Test environment
+npm run test:test -- tests/login.spec.ts
+
+# Production environment
+npm run test:prod -- tests/console.spec.ts
+```
+
+#### Run specific test by name:
+```bash
+# Match test name
+npm run test:test -- -g "Happy path"
+
+# Match partial name
+npm run test:prod -- -g "console errors"
+```
+
+#### Run specific browser + specific test:
+```bash
+npm run test:test -- --project=chromium tests/login.spec.ts
+
+TEST_ENV=prod npx playwright test tests/links.spec.ts --project=chromium
+```
+
+#### Run in headed mode (see browser):
+```bash
+# Pre-configured scripts
+npm run test:test:headed
+npm run test:stage:headed
+npm run test:prod:headed
+
+# Or with manual options
+npm run test:test -- --headed --project=firefox
+```
+
+#### Debug mode:
+```bash
+npm run test:debug
+
+# Or specific test
+TEST_ENV=test npx playwright test tests/login.spec.ts --debug
+```
+
+### Docker Runs
+
+#### Run all tests in Docker on specific environment:
+```bash
+# Test environment (starts app + tests)
+docker-compose up --abort-on-container-exit --exit-code-from playwright-tests
+
+# Staging environment
+TEST_ENV=stage docker-compose up --abort-on-container-exit --exit-code-from playwright-tests
+
+# Production environment
+TEST_ENV=prod docker-compose up --abort-on-container-exit --exit-code-from playwright-tests
+```
+
+#### Run specific browser in Docker:
+```bash
+# Chromium only
+docker-compose run --rm playwright-tests npx playwright test --project=chromium
+
+# Firefox only
+TEST_ENV=stage docker-compose run --rm playwright-tests npx playwright test --project=firefox
+```
+
+#### Run specific test file in Docker:
+```bash
+# Test environment
+docker-compose run --rm playwright-tests npx playwright test tests/login.spec.ts
+
+# Production environment
+TEST_ENV=prod docker-compose run --rm playwright-tests npx playwright test tests/console.spec.ts
+```
+
+#### Run specific test by name in Docker:
+```bash
+docker-compose run --rm playwright-tests npx playwright test -g "Happy path"
+
+TEST_ENV=prod docker-compose run --rm playwright-tests npx playwright test -g "console errors"
+```
+
+#### Run specific browser + specific test in Docker:
+```bash
+# Test environment
+docker-compose run --rm playwright-tests npx playwright test tests/login.spec.ts --project=chromium
+
+# Production environment
+TEST_ENV=prod docker-compose run --rm playwright-tests npx playwright test tests/links.spec.ts --project=chromium
+```
+
+#### Run with verbose output in Docker:
+```bash
+docker-compose run --rm playwright-tests npx playwright test --verbose
+
+TEST_ENV=stage docker-compose run --rm playwright-tests npx playwright test --verbose
+```
+
+### Other Useful Commands
+
 | Command | Purpose |
 |---------|---------|  
 | `npm install` | Install all dependencies |
-| `npm run test:test` | Run tests on test environment |
-| `npm run test:stage` | Run tests on staging environment |
-| `npm run test:prod` | Run tests on production environment |
-| `npm run test:test:headed` | Run tests on test environment (headed mode) |
-| `npm run test:stage:headed` | Run tests on staging environment (headed mode) |
-| `npm run test:prod:headed` | Run tests on production environment (headed mode) |
-| `npm run test:debug` | Run tests in debug mode |
-| `npm test` | Run all tests (default config) |
-| `npx playwright test --config=playwright-test.config.ts` | Run with explicit test config |
-| `npx playwright test --config=playwright-prod.config.ts` | Run with explicit prod config |
-| `npx playwright test --ui` | Run tests in UI mode (interactive) |
+| `npm run start` | **Start local webserver** on port 4000 (required for test env without Docker) |
+| `npx playwright test --ui` | Run tests in UI mode (interactive, local only) |
 | `npx playwright show-report` | View HTML test report |
 | `npx playwright install` | Install browsers |
-| `TEST_ENV=prod npx playwright test` | Run using dynamic router config |---
+| `docker-compose down` | Stop and remove Docker containers |
+| `docker-compose down -v` | Stop containers and remove volumes |
+| `docker-compose build` | Rebuild Docker images |---
 
 ## Best Practices
 
