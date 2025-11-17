@@ -107,10 +107,7 @@ fashion-test-playwright/
 │   ├── login.spec.ts            # Login tests
 │   ├── console.spec.ts          # Console error checks (home/about pages)
 │   └── links.spec.ts            # Link crawler: asserts 200/30x, no 40x
-├── playwright.config.ts         # Dynamic config router
-├── playwright-test.config.ts    # Test environment configuration
-├── playwright-stage.config.ts   # Staging environment configuration
-├── playwright-prod.config.ts    # Production environment configuration
+├── playwright.config.ts         # Unified configuration (all environments)
 ├── Dockerfile                   # Docker image for Playwright tests
 ├── docker-compose.yml           # Orchestrates app and test containers
 ├── Jenkinsfile                  # Jenkins CI/CD pipeline
@@ -170,10 +167,8 @@ The project uses **separate configuration files per environment** for better iso
 
 ### Quick Start
 
-**Recommended approach:** Use npm scripts with explicit config files
-
 ```bash
-# Test environment (localhost)
+# Test environment (localhost - auto-starts server)
 npm run test:test
 
 # Staging environment
@@ -185,19 +180,14 @@ npm run test:prod
 
 ### Run on Test Environment
 
-The test environment targets localhost.
+The test environment targets localhost and automatically starts a local web server.
 
 #### Using npm script (Recommended):
 ```bash
 npm run test:test
 ```
 
-#### Using explicit config file:
-```bash
-npx playwright test --config=playwright-test.config.ts
-```
-
-#### Using environment variable (Legacy):
+#### Using TEST_ENV directly:
 ```bash
 TEST_ENV=test npx playwright test
 ```
@@ -212,6 +202,11 @@ npm run test:test -- tests/login.spec.ts
 npm run test:test:headed
 ```
 
+#### Run specific browser:
+```bash
+npm run test:test -- --project=chromium
+```
+
 ---
 
 ### Run on Staging Environment
@@ -221,17 +216,12 @@ npm run test:test:headed
 npm run test:stage
 ```
 
-#### Using explicit config file:
-```bash
-npx playwright test --config=playwright-stage.config.ts
-```
-
-#### Using environment variable (Legacy):
+#### Using TEST_ENV directly:
 ```bash
 TEST_ENV=stage npx playwright test
 ```
 
-#### Run with additional Playwright options:
+#### Run with additional options:
 ```bash
 npm run test:stage -- --project=chromium --headed
 ```
@@ -250,12 +240,7 @@ npm run test:stage:headed
 npm run test:prod
 ```
 
-#### Using explicit config file:
-```bash
-npx playwright test --config=playwright-prod.config.ts
-```
-
-#### Using environment variable (Legacy):
+#### Using TEST_ENV directly:
 ```bash
 TEST_ENV=prod npx playwright test
 ```
@@ -270,13 +255,18 @@ npm run test:prod:headed
 PROD_USERNAME=myuser PROD_PASSWORD=mypass npm run test:prod
 ```
 
+#### Run in Docker:
+```bash
+TEST_ENV=prod docker-compose run --rm playwright-tests npx playwright test
+```
+
 ---
 
 ### Run with Custom Parameters
 
-#### Specify config and test file:
+#### Specify environment and test file:
 ```bash
-npx playwright test --config=playwright-prod.config.ts tests/login.spec.ts
+TEST_ENV=prod npx playwright test tests/login.spec.ts
 ```
 
 #### Run in headed mode (see browser window):
@@ -289,8 +279,6 @@ npm run test:prod:headed
 #### Run in debug mode (step through code):
 ```bash
 npm run test:debug
-# or with specific config:
-npx playwright test --config=playwright-test.config.ts --debug
 ```
 
 #### Run with specific browser project:
@@ -313,14 +301,14 @@ npm run test:prod -- --verbose
 npm run test:test -- --timeout=60000
 ```
 
-#### Combined example (Production, Chrome, Headed, Verbose):
+#### Combined example (Production, Chromium, Headed, Verbose):
 ```bash
-npx playwright test --config=playwright-prod.config.ts --project=chrome --headed --verbose
+TEST_ENV=prod npx playwright test --project=chromium --headed --verbose
 ```
 
 #### Run with UI mode (interactive):
 ```bash
-npx playwright test --config=playwright-test.config.ts --ui
+TEST_ENV=test npx playwright test --ui
 ```
 
 ---
@@ -784,11 +772,11 @@ npm run test:test -- --verbose
 The repository ships with a parameterized Jenkins pipeline (`Jenkinsfile`) allowing runs against **test**, **stage**, or **prod** via a dropdown.
 
 #### Parameter Mapping
-| ENVIRONMENT | Executed npm Script | Config File | Target Base URL |
-|-------------|---------------------|-------------|-----------------|
-| test        | `npm run test:test` | `playwright-test.config.ts`  | Docker: `http://fashionhub-app:4000/fashionhub/` (locally: `http://localhost:4000/fashionhub/`) |
-| stage       | `npm run test:stage`| `playwright-stage.config.ts` | `https://staging-env/fashionhub/` |
-| prod        | `npm run test:prod` | `playwright-prod.config.ts`  | `https://pocketaces2.github.io/fashionhub/` |
+| ENVIRONMENT | Executed npm Script | Config Used | Target Base URL |
+|-------------|---------------------|-------------|------------------|
+| test        | `npm run test:test` | `playwright.config.ts` (TEST_ENV=test)  | Docker: `http://fashionhub-app:4000/fashionhub/` (locally: `http://localhost:4000/fashionhub/`) |
+| stage       | `npm run test:stage`| `playwright.config.ts` (TEST_ENV=stage) | `https://staging-env/fashionhub/` |
+| prod        | `npm run test:prod` | `playwright.config.ts` (TEST_ENV=prod)  | `https://pocketaces2.github.io/fashionhub/` |
 
 #### Usage Steps
 1. Create a Pipeline job pointing to this repo (SCM: Git, branch `main`).
@@ -830,7 +818,7 @@ docker cp "$CID":/app/playwright-report ./playwright-report
 2. Avoid host bind mounts for test code in CI.
 3. Keep production runs serial (already configured).
 4. Publish reports even on failure for debugging.
-5. Use the environment-specific configs rather than `TEST_ENV` legacy mode.
+5. Leverage `TEST_ENV` to switch environments dynamically.
 
 
 ### Running Tests in CI
