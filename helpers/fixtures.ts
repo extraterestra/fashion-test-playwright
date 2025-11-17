@@ -2,26 +2,25 @@ import { test as base, expect } from '@playwright/test';
 import { LoginPage } from '../pages/loginPage';
 import { HomePage } from '../pages/homePage';
 
-// Dynamic import of credentials based on TEST_ENV
+// Resolve credentials based on TEST_ENV and environment variables
 const getCredentials = () => {
-  const env = process.env.TEST_ENV || 'test';
-  
-  try {
-    if (env === 'prod') {
-      return require('../playwright-prod.config').testCredentials;
-    } else if (env === 'stage') {
-      return require('../playwright-stage.config').testCredentials;
-    } else {
-      return require('../playwright-test.config').testCredentials;
-    }
-  } catch (error) {
-    // Fallback to default credentials
-    console.warn('Could not load credentials from config, using defaults');
+  const env = (process.env.TEST_ENV || 'test').toLowerCase();
+  if (env === 'prod') {
     return {
-      username: 'demouser',
-      password: 'fashion123',
+      username: process.env.PROD_USERNAME || 'demouser',
+      password: process.env.PROD_PASSWORD || 'fashion123',
     };
   }
+  if (env === 'stage') {
+    return {
+      username: process.env.STAGE_USERNAME || 'stageuser',
+      password: process.env.STAGE_PASSWORD || 'stagepass123',
+    };
+  }
+  return {
+    username: process.env.TEST_USERNAME || 'demouser',
+    password: process.env.TEST_PASSWORD || 'fashion123',
+  };
 };
 
 type MyFixtures = {

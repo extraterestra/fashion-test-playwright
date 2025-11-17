@@ -6,13 +6,13 @@
   "scripts": {
     "start": "npx http-server ./ -p 4000",
     "test": "npx playwright test",
-    "test:test": "cross-env TEST_ENV=test npx playwright test --config=playwright-test.config.ts",
-    "test:stage": "cross-env TEST_ENV=stage npx playwright test --config=playwright-stage.config.ts",
-    "test:prod": "cross-env TEST_ENV=prod npx playwright test --config=playwright-prod.config.ts",
-    "test:test:headed": "cross-env TEST_ENV=test npx playwright test --config=playwright-test.config.ts --headed",
-    "test:stage:headed": "cross-env TEST_ENV=stage npx playwright test --config=playwright-stage.config.ts --headed",
-    "test:prod:headed": "cross-env TEST_ENV=prod npx playwright test --config=playwright-prod.config.ts --headed",
-    "test:debug": "npx playwright test --config=playwright-test.config.ts --debug",
+    "test:test": "cross-env TEST_ENV=test npx playwright test --config=playwright.config.ts",
+    "test:stage": "cross-env TEST_ENV=stage npx playwright test --config=playwright.config.ts",
+    "test:prod": "cross-env TEST_ENV=prod npx playwright test --config=playwright.config.ts",
+    "test:test:headed": "cross-env TEST_ENV=test npx playwright test --config=playwright.config.ts --headed",
+    "test:stage:headed": "cross-env TEST_ENV=stage npx playwright test --config=playwright.config.ts --headed",
+    "test:prod:headed": "cross-env TEST_ENV=prod npx playwright test --config=playwright.config.ts --headed",
+    "test:debug": "npx playwright test --config=playwright.config.ts --debug",
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up --abort-on-container-exit",
     "docker:down": "docker-compose down",
@@ -26,6 +26,7 @@
   "devDependencies": {
     "@playwright/test": "^1.56.1",
     "@types/node": "^24.10.1",
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "http-server": "^14.1.1"
   }
 }
