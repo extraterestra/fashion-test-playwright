@@ -101,8 +101,9 @@ fashion-test-playwright/
 │   ├── basePage.ts              # Base page with shared utilities
 │   ├── loginPage.ts             # Login page object
 │   └── homePage.ts              # Home/dashboard page object
+├── helpers/
+│   └── fixtures.ts              # Custom Playwright test fixtures
 ├── tests/
-│   ├── fixtures.ts              # Custom Playwright test fixtures
 │   ├── login.spec.ts            # Login tests
 │   ├── console.spec.ts          # Console error checks (home/about pages)
 │   └── links.spec.ts            # Link crawler: asserts 200/30x, no 40x
@@ -377,7 +378,7 @@ Fixtures are a Playwright feature that allows you to:
 - **Inject dependencies** directly into test functions
 - **Ensure proper cleanup** after tests complete
 
-### Custom Fixtures (`tests/fixtures.ts`)
+### Custom Fixtures (`helpers/fixtures.ts`)
 
 The project includes custom fixtures that automatically create and initialize page objects:
 
@@ -441,7 +442,7 @@ test('Login test', async ({ page }) => {
 
 ** With Fixtures (clean):**
 ```typescript
-import { test, expect } from './fixtures';
+import { test, expect } from '../helpers/fixtures';
 
 test('Login test', async ({ loginPage, homePage }) => {
   // loginPage is already initialized and navigated to login.html
@@ -463,7 +464,7 @@ test('Login test', async ({ loginPage, homePage }) => {
 
 To add more fixtures (e.g., for a ProductPage):
 
-1. **Update `tests/fixtures.ts`:**
+1. **Update `helpers/fixtures.ts`:**
 
 ```typescript
 import { ProductPage } from '../pages/productPage';
@@ -608,7 +609,7 @@ Home/dashboard page object with methods:
 ### Example 1: Happy Path Login Test (Using Fixtures)
 
 ```typescript
-import { test, expect } from './fixtures';
+import { test, expect } from '../helpers/fixtures';
 
 test.describe('Login page', () => {
   test.beforeEach(async ({ loginPage }) => {
@@ -630,7 +631,7 @@ test.describe('Login page', () => {
 ### Example 2: Negative Path - Invalid Password (Using Fixtures)
 
 ```typescript
-import { test, expect } from './fixtures';
+import { test, expect } from '../helpers/fixtures';
 
 test.describe('Login page', () => {
   test.beforeEach(async ({ loginPage }) => {
@@ -677,7 +678,7 @@ test('Manual setup example', async ({ page }) => {
 ### Example 4: Environment-Specific Logic with Fixtures
 
 ```typescript
-import { test, expect } from './fixtures';
+import { test, expect } from '../helpers/fixtures';
 
 test('Test with environment check', async ({ loginPage, page, baseURL }) => {
   console.log('Running test against:', baseURL);
@@ -692,7 +693,7 @@ test('Test with environment check', async ({ loginPage, page, baseURL }) => {
 ### Example 5: Multiple Tests Using Same Fixtures
 
 ```typescript
-import { test, expect } from './fixtures';
+import { test, expect } from '../helpers/fixtures';
 
 test.describe('Login validation', () => {
   test('Valid credentials', async ({ loginPage, homePage }) => {
